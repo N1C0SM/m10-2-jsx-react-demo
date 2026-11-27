@@ -1,98 +1,265 @@
+
 import { useState } from 'react';
 
 // ============================================================================
-// [CLAVE EXPOSICIÓN 3] RENDERIZADO CONDICIONAL Y LA "TRAMPA DEL 0"
+// [CLAVE EXPOSICIÓN 2] EXPRESIONES JAVASCRIPT { } Y ESTILOS EN LÍNEA
 // ----------------------------------------------------------------------------
-// 1. EARLY RETURN: Usar `if` antes del `return` principal para estados de carga.
-// 2. TERNARIO (`condición ? A : B`): Cuando existen dos ramas alternativas.
-// 3. OPERADOR `&&`: Para pintar un bloque solo si la condición es verdadera.
-// 4. TRAMPA CLÁSICA DE EXAMEN:
-//    `{notificaciones && <p>...</p>}` -> Si `notificaciones` vale 0, React
-//    NO lo ignora: pinta literalmente el número "0" en pantalla.
-//    SOLUCIÓN: Convertir siempre a booleano -> `{notificaciones > 0 && ...}`.
+// 1. Dentro de { } solo caben EXPRESIONES (algo que produce un valor):
+//    variables, cálculos, llamadas a funciones, template literals, ternarios.
+// 2. NO caben SENTENCIAS (if, for, while, switch). Esas se resuelven fuera
+//    del `return` o con expresiones equivalentes.
+// 3. `style={{ ... }}` lleva DOBLE LLAVE:
+//    - Llave exterior: abre expresión JSX.
+//    - Llave interior: define un objeto literal de JavaScript.
+//    - Propiedades CSS en camelCase: `backgroundColor`, `fontSize`, `borderRadius`.
+// 4. React IGNORA en pantalla: true, false, null y undefined.
 // ============================================================================
 
-export default function RenderizadoCondicional() {
-  const [cargando, setCargando] = useState(false);
-  const [sesionIniciada, setSesionIniciada] = useState(true);
-  const [notificaciones, setNotificaciones] = useState(0);
+// Función para formatear cantidades en euros con dos decimales.
+const formatearEuros = (cantidad) => `${cantidad.toFixed(2)} €`;
 
-  // 1. PATRÓN EARLY RETURN (fuera del JSX sí podemos usar `if` estándar)
-  if (cargando) {
-    return (
-      <section className="card">
-        <h2>Cargando módulo mediante Early Return...</h2>
-        <p className="subtitle">El componente retornó antes de evaluar el JSX principal.</p>
-        <button type="button" className="btn" onClick={() => setCargando(false)}>
-          Finalizar simulación de carga
-        </button>
-      </section>
-    );
-  }
+export default function ExpresionesYEstilos() {
+
+  // Estados originales
+  const [precioBase, setPrecioBase] = useState(100);
+  const [colorDestacado, setColorDestacado] = useState('#38bdf8');
+
+  // [TICKET 03] ESTADOS DE LA CALCULADORA FISCAL
+  const [tipoIVA, setTipoIVA] = useState('0.21');
+  const [descuento, setDescuento] = useState(0);
+
+  // Convertimos el IVA seleccionado a número.
+  const IVA = Number(tipoIVA);
+
+  // [TICKET 03] CÁLCULOS FISCALES
+  const importeDescontado = precioBase * descuento / 100;
+
+  const baseImponible = precioBase - importeDescontado;
+
+  const cuotaIVA = baseImponible * IVA;
+
+  const totalFinal = baseImponible + cuotaIVA;
+
+  // Objeto de estilos dinámico en JavaScript.
+  const estiloTarjetaDinamica = {
+    backgroundColor: 'var(--surface-alt)',
+    border: `2px solid ${colorDestacado}`,
+    borderRadius: '10px',
+    padding: '1rem',
+    transition: 'border-color 0.2s ease'
+  };
+
+  // Estilo dinámico del precio final.
+  const estiloPrecioFinal = {
+    color: descuento > 0 ? 'var(--green)' : 'var(--text)',
+    fontSize: '1.3rem',
+    fontWeight: '800'
+  };
 
   return (
     <section className="card">
-      <h2>3. Renderizado Condicional (y la Trampa del 0)</h2>
+
+      <h2>2. Expresiones JavaScript &#123; &#125; y Estilos en Línea</h2>
+
       <p className="subtitle">
-        Demostración interactiva de los tres patrones de renderizado condicional en JSX.
+        Las llaves son una ventana directa a JavaScript dentro del marcado JSX.
       </p>
 
-      <div className="btn-row" style={{ marginBottom: '1rem' }}>
-        <button type="button" className="btn btn-secondary" onClick={() => setCargando(true)}>
-          Probar Early Return (Cargando)
-        </button>
-        <button type="button" className="btn" onClick={() => setSesionIniciada((prev) => !prev)}>
-          Alternar Sesión ({sesionIniciada ? 'Activa' : 'Cerrada'})
-        </button>
-        <button type="button" className="btn" onClick={() => setNotificaciones((n) => n + 1)}>
-          +1 Notificación ({notificaciones})
-        </button>
-        <button type="button" className="btn btn-danger" onClick={() => setNotificaciones(0)}>
-          Poner a 0
-        </button>
-      </div>
-
       <div className="grid-2">
-        {/* 2. OPERADOR TERNARIO */}
-        <div className="box box-success">
-          <h3>Operador Ternario (? :)</h3>
-          <p>
-            Estado actual:{' '}
-            {sesionIniciada ? (
-              <span className="badge badge-ok">Usuario autenticado</span>
-            ) : (
-              <span className="badge badge-fail">Acceso como invitado</span>
-            )}
-          </p>
+
+        {/* =========================================
+            EJEMPLO 1: CALCULADORA FISCAL
+        ========================================= */}
+
+        <div className="box">
+          <h3>Expresiones evaluadas en tiempo real</h3>
+
+          <label htmlFor="precio-input">
+            Precio base (€):
+          </label>
+
+          <input
+            id="precio-input"
+            type="number"
+            min="0"
+            className="input"
+            value={precioBase}
+            onChange={(e) =>
+              setPrecioBase(Math.max(0, Number(e.target.value) || 0))
+            }
+          />
+
+          {/* SELECTOR DE IVA */}
+
+          <label
+            htmlFor="iva-select"
+            style={{ display: 'block', marginTop: '1rem' }}
+          >
+            Tipo de IVA:
+          </label>
+
+          <select
+            id="iva-select"
+            className="input"
+            value={tipoIVA}
+            onChange={(e) => setTipoIVA(e.target.value)}
+          >
+            <option value="0.21">General (21%)</option>
+            <option value="0.10">Reducido (10%)</option>
+            <option value="0.04">Superreducido (4%)</option>
+          </select>
+
+          {/* CAMPO DE DESCUENTO */}
+
+          <label
+            htmlFor="descuento-input"
+            style={{ display: 'block', marginTop: '1rem' }}
+          >
+            Descuento comercial (%):
+          </label>
+
+          <input
+            id="descuento-input"
+            type="number"
+            className="input"
+            min="0"
+            max="50"
+            value={descuento}
+            onChange={(e) => {
+              const valor = e.target.value;
+
+              setDescuento(
+                valor === ''
+                  ? 0
+                  : Math.min(50, Math.max(0, Number(valor) || 0))
+              );
+            }}
+          />
+
+          {/* DESGLOSE FISCAL */}
+
+          <h3 style={{ marginTop: '1.5rem' }}>
+            Desglose de la factura
+          </h3>
+
+          <ul className="list">
+
+            <li className="list-item">
+              <span>Precio Base:</span>
+              <strong>{formatearEuros(precioBase)}</strong>
+            </li>
+
+            <li className="list-item">
+              <span>Importe Descontado:</span>
+              <strong style={{ color: 'var(--red)' }}>
+                - {formatearEuros(importeDescontado)}
+              </strong>
+            </li>
+
+            <li className="list-item">
+              <span>Base Imponible:</span>
+              <strong>{formatearEuros(baseImponible)}</strong>
+            </li>
+
+            <li className="list-item">
+              <span>Cuota de IVA ({IVA * 100}%):</span>
+              <strong>{formatearEuros(cuotaIVA)}</strong>
+            </li>
+
+            <li
+              className="list-item"
+              style={{
+                border: '2px solid var(--border)',
+                marginTop: '0.5rem'
+              }}
+            >
+              <span>
+                <strong>Total Final:</strong>
+              </span>
+
+              <strong style={estiloPrecioFinal}>
+                {formatearEuros(totalFinal)}
+              </strong>
+            </li>
+
+          </ul>
+
+          {descuento > 0 && (
+            <p
+              style={{
+                color: 'var(--green)',
+                fontWeight: '600',
+                marginTop: '0.8rem',
+                fontSize: '0.9rem'
+              }}
+            >
+              ✓ Descuento del {descuento}% aplicado correctamente.
+            </p>
+          )}
         </div>
 
-        {/* 3. OPERADOR && — COMPARATIVA CON Y SIN LA TRAMPA DEL 0 */}
-        <div className="box box-danger">
-          <h3>Demostración en vivo: la Trampa del 0</h3>
-          <p style={{ fontSize: '0.88rem', color: '#cbd5e1', marginBottom: '0.5rem' }}>
-            Pon el contador a <strong>0</strong> y observa la diferencia entre ambos bloques:
+        {/* =========================================
+            EJEMPLO 2: ESTILOS DINÁMICOS
+        ========================================= */}
+
+        <div style={estiloTarjetaDinamica}>
+
+          <h3 style={{ color: colorDestacado, marginTop: 0 }}>
+            Estilos en línea con style=&#123;&#123; camelCase &#125;&#125;
+          </h3>
+
+          <p
+            style={{
+              fontSize: '0.92rem',
+              color: 'var(--muted)'
+            }}
+          >
+            El borde y el título de este recuadro se calculan dinámicamente
+            desde un objeto JavaScript usando{' '}
+            <code className="code-inline">border</code> y{' '}
+            <code className="code-inline">color</code>.
           </p>
 
-          <p>
-            <strong>Incorrecto</strong> (<code className="code-inline">notificaciones &amp;&amp; ...</code>):{' '}
-            {/* BUG INTENCIONADO CON FINES DIDÁCTICOS: cuando vale 0, pinta "0" */}
-            <span style={{ color: '#f87171', fontWeight: 'bold' }}>
-              {notificaciones && <span>Tienes {notificaciones} avisos</span>}
-            </span>
-          </p>
+          <div className="btn-row">
 
-          <p style={{ marginTop: '0.4rem' }}>
-            <strong>Correcto</strong> (<code className="code-inline">notificaciones &gt; 0 &amp;&amp; ...</code>):{' '}
-            <span style={{ color: '#34d399', fontWeight: 'bold' }}>
-              {notificaciones > 0 && <span>Tienes {notificaciones} avisos</span>}
-            </span>
-          </p>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => setColorDestacado('#38bdf8')}
+            >
+              Azul Cyan
+            </button>
+
+            <button
+              type="button"
+              className="btn"
+              style={{ backgroundColor: '#059669' }}
+              onClick={() => setColorDestacado('#10b981')}
+            >
+              Verde Esmeralda
+            </button>
+
+            <button
+              type="button"
+              className="btn"
+              style={{ backgroundColor: '#d97706' }}
+              onClick={() => setColorDestacado('#f59e0b')}
+            >
+              Ámbar
+            </button>
+
+          </div>
         </div>
+
       </div>
 
       <p className="file-hint">
-        Archivo para mostrar en VS Code: <code className="code-inline">src/components/03_RenderizadoCondicional.jsx</code>
+        Archivo para mostrar en VS Code:{' '}
+        <code className="code-inline">
+          src/components/02_ExpresionesYEstilos.jsx
+        </code>
       </p>
+
     </section>
   );
 }
