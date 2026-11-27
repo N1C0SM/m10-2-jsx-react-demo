@@ -1,96 +1,171 @@
+
 import { useState } from 'react';
 
 // ============================================================================
-// [CLAVE EXPOSICIÓN 2] EXPRESIONES JAVASCRIPT { } Y ESTILOS EN LÍNEA
+// [CLAVE EXPOSICIÓN 1] REGLAS SINTÁCTICAS FUNDAMENTALES DE JSX
 // ----------------------------------------------------------------------------
-// 1. Dentro de { } solo caben EXPRESIONES (algo que produce un valor):
-//    variables, cálculos, llamadas a funciones, template literals, ternarios.
-// 2. NO caben SENTENCIAS (if, for, while, switch). Esas se resuelven fuera
-//    del `return` o con expresiones equivalentes.
-// 3. `style={{ ... }}` lleva DOBLE LLAVE:
-//    - Llave exterior: abre expresión JSX.
-//    - Llave interior: define un objeto literal de JavaScript.
-//    - Propiedades CSS en camelCase: `backgroundColor`, `fontSize`, `borderRadius`.
-// 4. React IGNORA en pantalla: true, false, null y undefined.
+// 1. UN SOLO ELEMENTO RAÍZ: Un componente debe devolver un único nodo padre.
+//    Para evitar <div> innecesarios en el DOM, usamos Fragmentos: <> ... </>
+// 2. CIERRE OBLIGATORIO: Etiquetas vacías como <input />, <br />, <hr />
+//    SIEMPRE deben cerrarse con `/`.
+// 3. PALABRAS RESERVADAS DE JS:
+//    - En HTML: class="..."   -> En JSX: className="..."
+//    - En HTML: for="..."     -> En JSX: htmlFor="..."
+// 4. MAYÚSCULAS VS MINÚSCULAS:
+//    - <button> (minúscula)   -> Etiqueta HTML nativa
+//    - <EtiquetaInfo /> (May) -> Componente personalizado de React
 // ============================================================================
 
-const formatearEuros = (cantidad) => `${cantidad.toFixed(2)} €`;
+// Pequeño componente auxiliar (obligatoriamente empieza en MAYÚSCULA)
+function EtiquetaInfo({ texto }) {
+  return <span className="pill">{texto}</span>;
+}
 
-export default function ExpresionesYEstilos() {
-  const [precioBase, setPrecioBase] = useState(100);
-  const [colorDestacado, setColorDestacado] = useState('#38bdf8');
-  const IVA = 0.21;
+export default function SintaxisYFragmentos() {
 
-  // Objeto de estilos dinámico en JavaScript
-  const estiloTarjetaDinamica = {
-    backgroundColor: '#0f172a',
-    border: `2px solid ${colorDestacado}`,
-    borderRadius: '10px',
-    padding: '1rem',
-    transition: 'border-color 0.2s ease'
-  };
+  // [TICKET 02] ESTADO DEL INPUT
+  // useState guarda el nombre que escribe el usuario.
+  const [nombre, setNombre] = useState('');
+
+  // Comprobamos si el nombre tiene al menos 3 caracteres.
+  const nombreLimpio = nombre.trim();
+  const nombreValido = nombreLimpio.length >= 3;
+
+  // Mostramos error si ha escrito algo pero no llega a 3 caracteres.
+  const mostrarError = nombre.length > 0 && !nombreValido;
+
+  // Este bloque demuestra el uso de Fragment (<>...</>):
+  // Si inspeccionas el DOM en el navegador (F12), verás que el Fragment
+  // NO crea ningún <div> extra envolviendo las tarjetas.
 
   return (
-    <section className="card">
-      <h2>2. Expresiones JavaScript &#123; &#125; y Estilos en Línea</h2>
-      <p className="subtitle">
-        Las llaves son una ventana directa a JavaScript dentro del marcado JSX.
-      </p>
+    <>
+      <section className="card">
+        <h2>1. Reglas Sintácticas y Fragmentos (&lt;&gt;...&lt;/&gt;)</h2>
 
-      <div className="grid-2">
-        <div className="box">
-          <h3>Expresiones evaluadas en tiempo real</h3>
-          <label htmlFor="precio-input">Precio base (€):</label>
-          <input
-            id="precio-input"
-            type="number"
-            className="input"
-            value={precioBase}
-            onChange={(e) => setPrecioBase(Number(e.target.value) || 0)}
-          />
+        <p className="subtitle">
+          JSX parece HTML, pero se compila a llamadas de JavaScript (
+          <code className="code-inline">_jsx()</code>).
+          Por eso es más estricto que HTML5.
+        </p>
 
-          <ul className="list">
-            <li className="list-item">
-              <span>Operación matemática directa:</span>
-              <strong>{precioBase * IVA} € (IVA 21%)</strong>
-            </li>
-            <li className="list-item">
-              <span>Llamada a función:</span>
-              <strong>{formatearEuros(precioBase * (1 + IVA))}</strong>
-            </li>
-            <li className="list-item">
-              <span>Valores ignorados (true/false/null):</span>
-              <strong>[{true}{false}{null}{undefined}] (vacío)</strong>
-            </li>
-          </ul>
-        </div>
+        <div className="grid-2">
 
-        <div style={estiloTarjetaDinamica}>
-          <h3 style={{ color: colorDestacado, marginTop: 0 }}>
-            Estilos en línea con style=&#123;&#123; camelCase &#125;&#125;
-          </h3>
-          <p style={{ fontSize: '0.92rem', color: '#cbd5e1' }}>
-            El borde y el título de este recuadro se calculan dinámicamente desde un objeto
-            JavaScript usando <code className="code-inline">border</code> y <code className="code-inline">color</code>.
-          </p>
+          {/* =========================================
+              EJEMPLO 1: ATRIBUTOS Y VALIDACIÓN
+          ========================================= */}
 
-          <div className="btn-row">
-            <button type="button" className="btn" onClick={() => setColorDestacado('#38bdf8')}>
-              Azul Cyan
-            </button>
-            <button type="button" className="btn" style={{ backgroundColor: '#059669' }} onClick={() => setColorDestacado('#10b981')}>
-              Verde Esmeralda
-            </button>
-            <button type="button" className="btn" style={{ backgroundColor: '#d97706' }} onClick={() => setColorDestacado('#f59e0b')}>
-              Ámbar
-            </button>
+          <div className="box box-success">
+            <h3>Atributos adaptados a JavaScript</h3>
+
+            {/* Comentario en JSX: siempre entre llaves y sintaxis de bloque JS */}
+
+            <label htmlFor="campo-alumno">
+              Nombre del alumno (
+              <code className="code-inline">htmlFor</code>
+              {' '}en lugar de{' '}
+              <code className="code-inline">for</code>):
+            </label>
+
+            {/* [TICKET 02] INPUT CONTROLADO */}
+            <input
+              id="campo-alumno"
+              type="text"
+              className="input"
+              placeholder="Ej.: Elena Martínez"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              aria-invalid={mostrarError}
+              aria-describedby="mensaje-validacion"
+            />
+
+            {/* [TICKET 02] VALIDACIÓN DEL NOMBRE */}
+
+            {mostrarError && (
+              <p
+                id="mensaje-validacion"
+                role="alert"
+                style={{
+                  color: 'var(--red)',
+                  fontWeight: '600',
+                  fontSize: '0.9rem',
+                  marginTop: '0.6rem'
+                }}
+              >
+                ⚠️ Error: El nombre debe tener al menos 3 caracteres.
+              </p>
+            )}
+
+            {/* [TICKET 02] SALUDO PERSONALIZADO */}
+
+            {nombreValido && (
+              <p
+                style={{
+                  color: 'var(--green)',
+                  fontWeight: '600',
+                  marginTop: '0.6rem'
+                }}
+              >
+                ¡Bienvenido/a al portal, {nombreLimpio}!
+              </p>
+            )}
+
+            {/* MENSAJE INICIAL */}
+
+            {nombre.length === 0 && (
+              <p
+                style={{
+                  color: 'var(--muted)',
+                  fontSize: '0.85rem',
+                  marginTop: '0.5rem'
+                }}
+              >
+                Introduce al menos 3 caracteres.
+              </p>
+            )}
           </div>
-        </div>
-      </div>
 
-      <p className="file-hint">
-        Archivo para mostrar en VS Code: <code className="code-inline">src/components/02_ExpresionesYEstilos.jsx</code>
-      </p>
-    </section>
+          {/* =========================================
+              EJEMPLO 2: COMPONENTES PERSONALIZADOS
+          ========================================= */}
+
+          <div className="box box-warn">
+            <h3>Componentes en Mayúscula vs. HTML</h3>
+
+            <p style={{
+              marginBottom: '0.75rem',
+              color: 'var(--muted)',
+              fontSize: '0.9rem'
+            }}>
+              Abajo renderizamos un componente propio{' '}
+              <code className="code-inline">
+                &lt;EtiquetaInfo /&gt;
+              </code>:
+            </p>
+
+            <EtiquetaInfo texto="Componente con inicial Mayúscula" />
+
+            <br />
+            <br />
+
+            <small style={{ color: 'var(--muted)' }}>
+              Nota: los saltos de línea anteriores usan{' '}
+              <code className="code-inline">&lt;br /&gt;</code> cerrado.
+            </small>
+          </div>
+
+        </div>
+
+        {/* INFORMACIÓN DEL ARCHIVO */}
+
+        <p className="file-hint">
+          Archivo para mostrar en VS Code:{' '}
+          <code className="code-inline">
+            src/components/01_SintaxisYFragmentos.jsx
+          </code>
+        </p>
+
+      </section>
+    </>
   );
 }
