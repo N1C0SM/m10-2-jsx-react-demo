@@ -2,170 +2,264 @@
 import { useState } from 'react';
 
 // ============================================================================
-// [CLAVE EXPOSICIÓN 1] REGLAS SINTÁCTICAS FUNDAMENTALES DE JSX
+// [CLAVE EXPOSICIÓN 2] EXPRESIONES JAVASCRIPT { } Y ESTILOS EN LÍNEA
 // ----------------------------------------------------------------------------
-// 1. UN SOLO ELEMENTO RAÍZ: Un componente debe devolver un único nodo padre.
-//    Para evitar <div> innecesarios en el DOM, usamos Fragmentos: <> ... </>
-// 2. CIERRE OBLIGATORIO: Etiquetas vacías como <input />, <br />, <hr />
-//    SIEMPRE deben cerrarse con `/`.
-// 3. PALABRAS RESERVADAS DE JS:
-//    - En HTML: class="..."   -> En JSX: className="..."
-//    - En HTML: for="..."     -> En JSX: htmlFor="..."
-// 4. MAYÚSCULAS VS MINÚSCULAS:
-//    - <button> (minúscula)   -> Etiqueta HTML nativa
-//    - <EtiquetaInfo /> (May) -> Componente personalizado de React
+// 1. Dentro de { } solo caben EXPRESIONES (algo que produce un valor):
+//    variables, cálculos, llamadas a funciones, template literals, ternarios.
+// 2. NO caben SENTENCIAS (if, for, while, switch). Esas se resuelven fuera
+//    del `return` o con expresiones equivalentes.
+// 3. `style={{ ... }}` lleva DOBLE LLAVE:
+//    - Llave exterior: abre expresión JSX.
+//    - Llave interior: define un objeto literal de JavaScript.
+//    - Propiedades CSS en camelCase: `backgroundColor`, `fontSize`, `borderRadius`.
+// 4. React IGNORA en pantalla: true, false, null y undefined.
 // ============================================================================
 
-// Pequeño componente auxiliar (obligatoriamente empieza en MAYÚSCULA)
-function EtiquetaInfo({ texto }) {
-  return <span className="pill">{texto}</span>;
-}
+// Función para formatear cantidades en euros con dos decimales.
+const formatearEuros = (cantidad) => `${cantidad.toFixed(2)} €`;
 
-export default function SintaxisYFragmentos() {
+export default function ExpresionesYEstilos() {
 
-  // [TICKET 02] ESTADO DEL INPUT
-  // useState guarda el nombre que escribe el usuario.
-  const [nombre, setNombre] = useState('');
+  // Estados originales
+  const [precioBase, setPrecioBase] = useState(100);
+  const [colorDestacado, setColorDestacado] = useState('#38bdf8');
 
-  // Comprobamos si el nombre tiene al menos 3 caracteres.
-  const nombreLimpio = nombre.trim();
-  const nombreValido = nombreLimpio.length >= 3;
+  // [TICKET 03] ESTADOS DE LA CALCULADORA FISCAL
+  const [tipoIVA, setTipoIVA] = useState('0.21');
+  const [descuento, setDescuento] = useState(0);
 
-  // Mostramos error si ha escrito algo pero no llega a 3 caracteres.
-  const mostrarError = nombre.length > 0 && !nombreValido;
+  // Convertimos el IVA seleccionado a número.
+  const IVA = Number(tipoIVA);
 
-  // Este bloque demuestra el uso de Fragment (<>...</>):
-  // Si inspeccionas el DOM en el navegador (F12), verás que el Fragment
-  // NO crea ningún <div> extra envolviendo las tarjetas.
+  // [TICKET 03] CÁLCULOS FISCALES
+  const importeDescontado = precioBase * descuento / 100;
+
+  const baseImponible = precioBase - importeDescontado;
+
+  const cuotaIVA = baseImponible * IVA;
+
+  const totalFinal = baseImponible + cuotaIVA;
+
+  // Objeto de estilos dinámico en JavaScript.
+  const estiloTarjetaDinamica = {
+    backgroundColor: 'var(--surface-alt)',
+    border: `2px solid ${colorDestacado}`,
+    borderRadius: '10px',
+    padding: '1rem',
+    transition: 'border-color 0.2s ease'
+  };
+
+  // Estilo dinámico del precio final.
+  const estiloPrecioFinal = {
+    color: descuento > 0 ? 'var(--green)' : 'var(--text)',
+    fontSize: '1.3rem',
+    fontWeight: '800'
+  };
 
   return (
-    <>
-      <section className="card">
-        <h2>1. Reglas Sintácticas y Fragmentos (&lt;&gt;...&lt;/&gt;)</h2>
+    <section className="card">
 
-        <p className="subtitle">
-          JSX parece HTML, pero se compila a llamadas de JavaScript (
-          <code className="code-inline">_jsx()</code>).
-          Por eso es más estricto que HTML5.
-        </p>
+      <h2>2. Expresiones JavaScript &#123; &#125; y Estilos en Línea</h2>
 
-        <div className="grid-2">
+      <p className="subtitle">
+        Las llaves son una ventana directa a JavaScript dentro del marcado JSX.
+      </p>
 
-          {/* =========================================
-              EJEMPLO 1: ATRIBUTOS Y VALIDACIÓN
-          ========================================= */}
+      <div className="grid-2">
 
-          <div className="box box-success">
-            <h3>Atributos adaptados a JavaScript</h3>
+        {/* =========================================
+            EJEMPLO 1: CALCULADORA FISCAL
+        ========================================= */}
 
-            {/* Comentario en JSX: siempre entre llaves y sintaxis de bloque JS */}
+        <div className="box">
+          <h3>Expresiones evaluadas en tiempo real</h3>
 
-            <label htmlFor="campo-alumno">
-              Nombre del alumno (
-              <code className="code-inline">htmlFor</code>
-              {' '}en lugar de{' '}
-              <code className="code-inline">for</code>):
-            </label>
+          <label htmlFor="precio-input">
+            Precio base (€):
+          </label>
 
-            {/* [TICKET 02] INPUT CONTROLADO */}
-            <input
-              id="campo-alumno"
-              type="text"
-              className="input"
-              placeholder="Ej.: Elena Martínez"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              aria-invalid={mostrarError}
-              aria-describedby="mensaje-validacion"
-            />
+          <input
+            id="precio-input"
+            type="number"
+            min="0"
+            className="input"
+            value={precioBase}
+            onChange={(e) =>
+              setPrecioBase(Math.max(0, Number(e.target.value) || 0))
+            }
+          />
 
-            {/* [TICKET 02] VALIDACIÓN DEL NOMBRE */}
+          {/* SELECTOR DE IVA */}
 
-            {mostrarError && (
-              <p
-                id="mensaje-validacion"
-                role="alert"
-                style={{
-                  color: 'var(--red)',
-                  fontWeight: '600',
-                  fontSize: '0.9rem',
-                  marginTop: '0.6rem'
-                }}
-              >
-                ⚠️ Error: El nombre debe tener al menos 3 caracteres.
-              </p>
-            )}
+          <label
+            htmlFor="iva-select"
+            style={{ display: 'block', marginTop: '1rem' }}
+          >
+            Tipo de IVA:
+          </label>
 
-            {/* [TICKET 02] SALUDO PERSONALIZADO */}
+          <select
+            id="iva-select"
+            className="input"
+            value={tipoIVA}
+            onChange={(e) => setTipoIVA(e.target.value)}
+          >
+            <option value="0.21">General (21%)</option>
+            <option value="0.10">Reducido (10%)</option>
+            <option value="0.04">Superreducido (4%)</option>
+          </select>
 
-            {nombreValido && (
-              <p
-                style={{
-                  color: 'var(--green)',
-                  fontWeight: '600',
-                  marginTop: '0.6rem'
-                }}
-              >
-                ¡Bienvenido/a al portal, {nombreLimpio}!
-              </p>
-            )}
+          {/* CAMPO DE DESCUENTO */}
 
-            {/* MENSAJE INICIAL */}
+          <label
+            htmlFor="descuento-input"
+            style={{ display: 'block', marginTop: '1rem' }}
+          >
+            Descuento comercial (%):
+          </label>
 
-            {nombre.length === 0 && (
-              <p
-                style={{
-                  color: 'var(--muted)',
-                  fontSize: '0.85rem',
-                  marginTop: '0.5rem'
-                }}
-              >
-                Introduce al menos 3 caracteres.
-              </p>
-            )}
-          </div>
+          <input
+            id="descuento-input"
+            type="number"
+            className="input"
+            min="0"
+            max="50"
+            value={descuento}
+            onChange={(e) => {
+              const valor = e.target.value;
 
-          {/* =========================================
-              EJEMPLO 2: COMPONENTES PERSONALIZADOS
-          ========================================= */}
+              setDescuento(
+                valor === ''
+                  ? 0
+                  : Math.min(50, Math.max(0, Number(valor) || 0))
+              );
+            }}
+          />
 
-          <div className="box box-warn">
-            <h3>Componentes en Mayúscula vs. HTML</h3>
+          {/* DESGLOSE FISCAL */}
 
-            <p style={{
-              marginBottom: '0.75rem',
-              color: 'var(--muted)',
-              fontSize: '0.9rem'
-            }}>
-              Abajo renderizamos un componente propio{' '}
-              <code className="code-inline">
-                &lt;EtiquetaInfo /&gt;
-              </code>:
+          <h3 style={{ marginTop: '1.5rem' }}>
+            Desglose de la factura
+          </h3>
+
+          <ul className="list">
+
+            <li className="list-item">
+              <span>Precio Base:</span>
+              <strong>{formatearEuros(precioBase)}</strong>
+            </li>
+
+            <li className="list-item">
+              <span>Importe Descontado:</span>
+              <strong style={{ color: 'var(--red)' }}>
+                - {formatearEuros(importeDescontado)}
+              </strong>
+            </li>
+
+            <li className="list-item">
+              <span>Base Imponible:</span>
+              <strong>{formatearEuros(baseImponible)}</strong>
+            </li>
+
+            <li className="list-item">
+              <span>Cuota de IVA ({IVA * 100}%):</span>
+              <strong>{formatearEuros(cuotaIVA)}</strong>
+            </li>
+
+            <li
+              className="list-item"
+              style={{
+                border: '2px solid var(--border)',
+                marginTop: '0.5rem'
+              }}
+            >
+              <span>
+                <strong>Total Final:</strong>
+              </span>
+
+              <strong style={estiloPrecioFinal}>
+                {formatearEuros(totalFinal)}
+              </strong>
+            </li>
+
+          </ul>
+
+          {descuento > 0 && (
+            <p
+              style={{
+                color: 'var(--green)',
+                fontWeight: '600',
+                marginTop: '0.8rem',
+                fontSize: '0.9rem'
+              }}
+            >
+              ✓ Descuento del {descuento}% aplicado correctamente.
             </p>
-
-            <EtiquetaInfo texto="Componente con inicial Mayúscula" />
-
-            <br />
-            <br />
-
-            <small style={{ color: 'var(--muted)' }}>
-              Nota: los saltos de línea anteriores usan{' '}
-              <code className="code-inline">&lt;br /&gt;</code> cerrado.
-            </small>
-          </div>
-
+          )}
         </div>
 
-        {/* INFORMACIÓN DEL ARCHIVO */}
+        {/* =========================================
+            EJEMPLO 2: ESTILOS DINÁMICOS
+        ========================================= */}
 
-        <p className="file-hint">
-          Archivo para mostrar en VS Code:{' '}
-          <code className="code-inline">
-            src/components/01_SintaxisYFragmentos.jsx
-          </code>
-        </p>
+        <div style={estiloTarjetaDinamica}>
 
-      </section>
-    </>
+          <h3 style={{ color: colorDestacado, marginTop: 0 }}>
+            Estilos en línea con style=&#123;&#123; camelCase &#125;&#125;
+          </h3>
+
+          <p
+            style={{
+              fontSize: '0.92rem',
+              color: 'var(--muted)'
+            }}
+          >
+            El borde y el título de este recuadro se calculan dinámicamente
+            desde un objeto JavaScript usando{' '}
+            <code className="code-inline">border</code> y{' '}
+            <code className="code-inline">color</code>.
+          </p>
+
+          <div className="btn-row">
+
+            <button
+              type="button"
+              className="btn"
+              onClick={() => setColorDestacado('#38bdf8')}
+            >
+              Azul Cyan
+            </button>
+
+            <button
+              type="button"
+              className="btn"
+              style={{ backgroundColor: '#059669' }}
+              onClick={() => setColorDestacado('#10b981')}
+            >
+              Verde Esmeralda
+            </button>
+
+            <button
+              type="button"
+              className="btn"
+              style={{ backgroundColor: '#d97706' }}
+              onClick={() => setColorDestacado('#f59e0b')}
+            >
+              Ámbar
+            </button>
+
+          </div>
+        </div>
+
+      </div>
+
+      <p className="file-hint">
+        Archivo para mostrar en VS Code:{' '}
+        <code className="code-inline">
+          src/components/02_ExpresionesYEstilos.jsx
+        </code>
+      </p>
+
+    </section>
   );
 }
